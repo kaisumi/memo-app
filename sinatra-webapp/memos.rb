@@ -13,76 +13,50 @@ get '/new-memo' do
 end
 
 post '/memos' do
-  memo_id = ''
+  id_text = new_id
+  write_memo(id_text, params)
+  write_titles(id_text, params)
+  redirect to('/')
+end
+
+delete %r{/memos/([0-9]{4})} do |id_text|
+  delete_memo(id_text)
+  delete_title(id_text)
+  redirect to('/')
+end
+
+get %r{/memos/([0-9]{4})} do |id_text|
+  @memo_contents = read_memo_contents(id_text)
+  erb :memo_contents
+end
+
+get %r{/editor/([0-9]{4})} do |id_text|
+  @memo_contents = read_memo_contents(id_text)
+  erb :editor
+end
+
+patch %r{/memos/([0-9]{4})} do |id_text|
+  write_memo(id_text, params)
+  update_title(id_text, params)
+  redirect to("/memos/#{id_text}")
+end
+
+def write_memo(id_text, params)
+  File.open("./memos/#{id_text}.txt", 'w') do |file|
+    file.puts "#{id_text}\n#{CGI.escapeHTML(params[:title])}\n#{CGI.escapeHTML(params[:body])}"
+  end
+end
+
+def new_id
   id_text = ''
   File.open('./memo_latest_id.txt', 'r') do |file|
-    memo_id = file.read.to_i + 1
-    id_text = format_index(memo_id)
+    id_text = format('%04d', file.read.to_i + 1)
   end
   File.open('./memo_latest_id.txt', 'w') do |file|
     file.puts id_text
   end
-  write_memo(memo_id, params)
-  File.open('./titles.txt', 'a') do |file|
-    file.puts "#{id_text}, #{params[:title]}"
-  end
-  redirect to('/')
+  id_text
 end
-
-delete %r{/memos/([0-9]{1,4})} do |memo_id|
-  id_text = format_index(memo_id.to_i)
-  File.delete("./memos/#{id_text}.txt")
-  titles = []
-  File.open('./titles.txt', 'r') do |file|
-    file.read.lines do |line|
-      titles << line if line.index(id_text).nil?
-    end
-  end
-  File.open('./titles.txt', 'w') do |file|
-    file.puts titles.join
-  end
-  redirect to('/')
-end
-
-get %r{/memos/([0-9]{1,4})} do |memo_id|
-  @memo_contents = read_memo_contents(memo_id)
-  erb :memo_contents
-end
-
-get %r{/editor/([0-9]{1,4})} do |memo_id|
-  @memo_contents = read_memo_contents(memo_id)
-  erb :editor
-end
-
-patch %r{/memos/([0-9]{1,4})} do |memo_id|
-  id_text = format_index(memo_id.to_i)
-  write_memo(memo_id, params)
-  titles = []
-  File.open('./titles.txt', 'r') do |file|
-    file.read.lines do |line|
-      titles << (line.index(id_text).nil? ? line : "#{id_text}, #{CGI.escapeHTML(params[:title])}\n")
-    end
-  end
-  File.open('./titles.txt', 'w') do |file|
-    file.puts titles.join
-  end
-  redirect to("/memos/#{memo_id}")
-end
-
-def write_memo(memo_id, params)
-  id_text = format_index(memo_id.to_i)
-  File.open("./memos/#{id_text}.txt", 'w') do |file|
-    file.puts "#{memo_id}\n#{CGI.escapeHTML(params[:title])}\n#{CGI.escapeHTML(params[:body])}"
-  end
-end
-
-# def anti_xss(text)
-#   substituting_text = {'<'=>'&lt;','>'=>'&gt;', '&'=>'&amp;', '\"'=>'&quot;', '\''=>'&#39'}
-#   substituting_text.each do |key, val|
-#     text.gsub!(key, val)
-#   end
-#   text
-# end
 
 def read_titles
   memos = []
@@ -104,8 +78,13 @@ def read_titles
   memos
 end
 
+def write_titles(id_text, params)
+  File.open('./titles.txt', 'a') do |file|
+    file.puts "#{id_text}, #{params[:title]}"
+  end
+end
+
 def read_memo_contents(memo_id)
-  memo_id = format_index(memo_id.to_i)
   contents = {}
   File.open("./memos/#{memo_id}.txt", 'r') do |file|
     body = ''
@@ -122,6 +101,30 @@ def read_memo_contents(memo_id)
   contents
 end
 
-def format_index(memo_id)
-  format('%04d', memo_id.to_i)
+def delete_memo(id_text)
+  File.delete("./memos/#{id_text}.txt")
+end
+
+def delete_title(id_text)
+  titles = []
+  File.open('./titles.txt', 'r') do |file|
+    file.read.lines do |line|
+      titles << line if line.index(id_text).nil?
+    end
+  end
+  File.open('./titles.txt', 'w') do |file|
+    file.puts titles.join
+  end
+end
+
+def update_title(id_text, params)
+  titles = []
+  File.open('./titles.txt', 'r') do |file|
+    file.read.lines do |line|
+      titles << (line.index(id_text).nil? ? line : "#{id_text}, #{CGI.escapeHTML(params[:title])}\n")
+    end
+  end
+  File.open('./titles.txt', 'w') do |file|
+    file.puts titles.join
+  end
 end

@@ -7,7 +7,7 @@
 <body>
   <header>
     <h1>メモアプリ</h1>
-    <%="<form action=\"/memos/#{@memo_contents[:index].to_i}\" method=\"post\">"%>
+    <%="<form action=\"/memos/#{@memo_contents[:index]}\" method=\"post\">"%>
       <div name="form_block">
       <input type="hidden" name="_method" value="patch">
       <label for="title">タイトル</label>
