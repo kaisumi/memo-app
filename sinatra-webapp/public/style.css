@@ -1,0 +1,16 @@
+body {
+  width: 100%;
+  white-space: pre-line;
+}
+.text-box {
+  display: inline-block;
+  width: 80%;
+  margin: 1 auto;
+}
+div {
+  width: 90%;
+  margin: 0 auto;
+}
+textarea{
+  height: 200px;
+}

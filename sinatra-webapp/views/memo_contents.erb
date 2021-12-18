@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<head>
+  <meta charset="utf-8">
+  <title>メモアプリ</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>メモアプリ</h1>
+  </header>
+  <h2><%= @memo_contents[:title]%></h2>
+  <p><%= @memo_contents[:body]%></p>
+  <%="<form action=\"\/editor\/#{@memo_contents[:index].to_i}\" method=\"get\">"%>
+    <button>変更</button>
+  </form>
+  <%="<form action=\"\/memos\/#{@memo_contents[:index].to_i}\" method=\"post\">"%>
+  <input type="hidden" name="_method" value="delete">
+    <button>削除</button>
+  </form>
+  <a href="/">トップに戻る</a>
+</body>
