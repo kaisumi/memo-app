@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sinatra'
+require 'cgi'
 
 get '/' do
   @memo_titles = read_titles
@@ -59,7 +60,7 @@ patch %r{/memos/([0-9]{1,4})} do |memo_id|
   titles = []
   File.open('./titles.txt', 'r') do |file|
     file.read.lines do |line|
-      titles << (line.index(id_text).nil? ? line : "#{id_text}, #{params[:title]}\n")
+      titles << (line.index(id_text).nil? ? line : "#{id_text}, #{CGI.escapeHTML(params[:title])}\n")
     end
   end
   File.open('./titles.txt', 'w') do |file|
@@ -71,9 +72,17 @@ end
 def write_memo(memo_id, params)
   id_text = format_index(memo_id.to_i)
   File.open("./memos/#{id_text}.txt", 'w') do |file|
-    file.puts "#{memo_id}\n#{params[:title]}\n#{params[:body]}"
+    file.puts "#{memo_id}\n#{CGI.escapeHTML(params[:title])}\n#{CGI.escapeHTML(params[:body])}"
   end
 end
+
+# def anti_xss(text)
+#   substituting_text = {'<'=>'&lt;','>'=>'&gt;', '&'=>'&amp;', '\"'=>'&quot;', '\''=>'&#39'}
+#   substituting_text.each do |key, val|
+#     text.gsub!(key, val)
+#   end
+#   text
+# end
 
 def read_titles
   memos = []
