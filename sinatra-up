@@ -1,4 +1,4 @@
 #!/bin/zsh
-cd sinatra-webapp
+cd ./memo-app/sinatra-webapp
 ruby memos.rb -p 4567
 
