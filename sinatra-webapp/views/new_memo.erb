@@ -3,16 +3,17 @@
   <meta charset="utf-8">
   <title>メモアプリ</title>
   <link rel="stylesheet" href="/style.css" />
+  <link rel="shortcut icon" href="/image/favicon.ico" />
 </head>
 <body>
   <header>
     <h1>メモアプリ</h1>
     <form action="/memos" method="post">
       <div>
-      <label for="title">タイトル</label>
-      <input type="text" name="title" id="title" class="text-box">
+      <label for="title">タイトル（必須）<%=@message%></label>
+      <%="<input type=\"text\" name=\"title\" id=\"title\" class=\"text-box\" value=\"#{@memo_contents[:title]}\">"%>
       <label for="body">メモ</label>
-      <textarea name="body" placeholder="メモを入力" id="body" class="text-box"></textarea>
+      <%="<textarea name=\"body\" id=\"body\" class=\"text-box\">#{@memo_contents[:body]}</textarea>"%>
       </div>
       <button>保存</button>
     </form>

@@ -3,20 +3,32 @@
 require 'sinatra'
 require 'cgi'
 
+NO_TITLE_ERROR = '<font color="red">タイトルが空欄です</font>'
+
 get '/' do
   @memo_titles = read_titles
   erb :index
 end
 
 get '/new-memo' do
+  @memo_contents = { title: '', body: '' }
   erb :new_memo
 end
 
 post '/memos' do
-  id_text = new_id
-  write_memo(id_text, params)
-  write_titles(id_text, params)
-  redirect to('/')
+  @title_blank = false
+  if params[:title].empty?
+    @title_blank = true
+    @memo_contents = params
+    @message = NO_TITLE_ERROR
+    erb :new_memo
+  else
+    @message = ''
+    id_text = new_id
+    write_memo(id_text, params)
+    write_titles(id_text, params)
+    redirect to('/')
+  end
 end
 
 delete %r{/memos/([0-9]{4})} do |id_text|
@@ -36,10 +48,21 @@ get %r{/editor/([0-9]{4})} do |id_text|
 end
 
 patch %r{/memos/([0-9]{4})} do |id_text|
-  write_memo(id_text, params)
-  update_title(id_text, params)
-  redirect to("/memos/#{id_text}")
+  @title_blank = false
+  if params[:title].empty?
+    @title_blank = true
+    @memo_contents = params
+    @memo_contents[:index] = id_text
+    @message = NO_TITLE_ERROR
+    erb :editor
+  else
+    @message = ''
+    write_memo(id_text, params)
+    update_title(id_text, params)
+    redirect to("/memos/#{id_text}")
+  end
 end
+
 
 def write_memo(id_text, params)
   File.open("./memos/#{id_text}.txt", 'w') do |file|
