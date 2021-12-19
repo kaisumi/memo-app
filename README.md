@@ -24,7 +24,8 @@ bundle install
 ```
 ./sinatra-up
 ```
-2. Finderでmemo-app.appを起動（Windowsの場合はブラウザでlocalhost:4567にアクセス)
+2. ブラウザでlocalhost:4567にアクセス
+![image](https://user-images.githubusercontent.com/39044468/146695456-1e9ee933-399c-4853-853f-ab4a1dfaa951.png)
 ## 使用方法
 ### メモの追加
 1. トップで［追加］を選択
