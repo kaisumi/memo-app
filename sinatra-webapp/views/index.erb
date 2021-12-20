@@ -12,8 +12,10 @@
       <button>追加</button>
     </form>
   </header>
-  <ul>
-  <% @memo_titles.each do |memo| %>
-  <li><%="<a href=\"/memos/#{memo[:memo_id]}\">#{memo[:title]}</a>"%></li>
-  <% end %>
+  <div class="contents">
+    <ul>
+    <% @memo_titles.each do |memo| %>
+    <li><%="<a href=\"/memos/#{memo[:memo_id]}\">#{memo[:title]}</a>"%></li>
+    <% end %>
+  </div>
 </body>

@@ -9,22 +9,26 @@
   <header>
     <h1>メモアプリ</h1>
   </header>
-  <h2><%= @memo_contents[TITLE_SYM]%></h2>
-  <p><%= @memo_contents[BODY_SYM]%></p>
-  <div class="buttons">
-  <div class="contents-button">
-    <%="<form action=\"\/editor\/#{@memo_contents[ID_SYM]}\" method=\"get\">"%>
-      <button>変更</button>
-    </form>
+  <div class="contents">
+    <h2><%= @memo_contents[TITLE_SYM]%></h2>
+    <p><%= @memo_contents[BODY_SYM]%></p>
+    <div class="buttons">
+      <div class="contents-button">
+        <%="<form action=\"\/editor\/#{@memo_contents[ID_SYM]}\" method=\"get\">"%>
+          <button>変更</button>
+        </form>
+      </div>
+      <div class="contents-button">
+        <%="<form action=\"\/memos\/#{@memo_contents[ID_SYM]}\" method=\"post\">"%>
+          <input type="hidden" name="_method" value="delete">
+          <button>削除</button>
+        </form>
+      </div>
+    </div>
   </div>
-  <div class="contents-button">
-    <%="<form action=\"\/memos\/#{@memo_contents[ID_SYM]}\" method=\"post\">"%>
-      <input type="hidden" name="_method" value="delete">
-      <button>削除</button>
-    </form>
-  </div>
-  </div>
-  <br />
-  <br />
-  <a href="/">トップに戻る</a>
+  <footer>
+    <br />
+    <br />
+    <a href="/">トップに戻る</a>
+  </footer>
 </body>

@@ -8,6 +8,8 @@
 <body>
   <header>
     <h1>メモアプリ</h1>
+  </header>
+  <div class="contents">
     <form action="/memos" method="post">
       <div class="form_block">
         <label for="title">タイトル（必須）<%=@message%></label>
@@ -19,8 +21,10 @@
         <button>保存</button>
       </div>
     </form>
+  </div>
+  <footer>
     <br />
     <br />
     <a href="/">トップに戻る</a>
-  </header>
+  </footer>
 </body>
