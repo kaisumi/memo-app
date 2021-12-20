@@ -24,7 +24,11 @@ textarea{
 form, button, input{
   display: inline-block;
 }
+h2{
+  margin-left: 20pt;
+}
 p{
+  margin-left: 40pt;
   white-space: pre-line;
 }
 .button{
