@@ -2,8 +2,17 @@
 
 require 'sinatra'
 require 'cgi'
+require 'pg'
 
 NO_TITLE_ERROR = '<font color="red">タイトルが空欄です</font>'
+TABLE_NAME = 'memos'
+TITLE_COL = 'title'
+ID_COL = 'memo_id'
+BODY_COL = 'memo'
+MEMO_ID = "to_char(#{ID_COL}, 'FM0000')"
+TITLE_SYM = TITLE_COL.to_sym
+BODY_SYM = BODY_COL.to_sym
+ID_SYM = ID_COL.to_sym
 
 get '/' do
   @memo_titles = read_titles
@@ -11,29 +20,26 @@ get '/' do
 end
 
 get '/new-memo' do
-  @memo_contents = { title: '', body: '' }
+  @memo_contents = { TITLE_SYM => '', BODY_SYM => '' }
   erb :new_memo
 end
 
 post '/memos' do
   @title_blank = false
-  if params[:title].empty?
+  if params[TITLE_SYM].empty?
     @title_blank = true
     @memo_contents = params
     @message = NO_TITLE_ERROR
     erb :new_memo
   else
     @message = ''
-    id_text = new_id
-    write_memo(id_text, params)
-    write_titles(id_text, params)
+    add_memo(params)
     redirect to('/')
   end
 end
 
 delete %r{/memos/([0-9]{4})} do |id_text|
   delete_memo(id_text)
-  delete_title(id_text)
   redirect to('/')
 end
 
@@ -49,106 +55,74 @@ end
 
 patch %r{/memos/([0-9]{4})} do |id_text|
   @title_blank = false
-  if params[:title].empty?
+  if params[TITLE_SYM].empty?
     @title_blank = true
     @memo_contents = params
-    @memo_contents[:index] = id_text
+    @memo_contents[ID_SYM] = id_text
     @message = NO_TITLE_ERROR
     erb :editor
   else
     @message = ''
-    write_memo(id_text, params)
-    update_title(id_text, params)
+    update_memo(id_text, params)
     redirect to("/memos/#{id_text}")
   end
 end
 
-
-def write_memo(id_text, params)
-  Dir.mkdir("memos") if !Dir.exist?("memos")
-  File.open("./memos/#{id_text}.txt", 'w') do |file|
-    file.puts "#{id_text}\n#{CGI.escapeHTML(params[:title])}\n#{CGI.escapeHTML(params[:body])}"
-  end
+def add_memo(params)
+  conn = connect_db
+  conn.exec(sql_insert(sanitizer(params[:title]), sanitizer(params[:body])))  # ここはシンボルをリテラルで入れないとescapeHTMLでエラーが出る
 end
 
-def new_id
-  id_text = ''
-  File.open('./memo_latest_id.txt', 'r') do |file|
-    id_text = format('%04d', file.read.to_i + 1)
-  end
-  File.open('./memo_latest_id.txt', 'w') do |file|
-    file.puts id_text
-  end
-  id_text
+def sql_insert(title, body)
+  "INSERT INTO #{TABLE_NAME} (#{TITLE_COL}, #{BODY_COL}) VALUES ('#{title}', '#{body}')"
+end
+
+def update_memo(id_text, params)
+  conn = connect_db
+  conn.exec(sql_update(sanitizer(params[:title]), sanitizer(params[:body]), id_text.to_i)) # 同上
+end
+
+def sql_update(title, body, id_integer)
+  "UPDATE #{TABLE_NAME} SET #{TITLE_COL} = '#{title}', #{BODY_COL} = '#{body}' WHERE #{ID_COL} = #{id_integer}"
+end
+
+def sanitizer(text)
+  CGI.escapeHTML(text).gsub('\r\n', '<br />')
 end
 
 def read_titles
   memos = []
-  contents = {}
-  File.open('./titles.txt', 'r') do |file|
-    file.read.split("\n").each do |memo|
-      next if memo.empty?
-
-      memo.split(', ').each_with_index do |content, i|
-        case i
-        when 0 then contents.store(:memo_id, content)
-        when 1 then contents.store(:title, content)
-        end
-      end
-      memos << contents
-      contents = {}
-    end
+  conn = connect_db
+  conn.exec("SELECT #{MEMO_ID} as #{ID_COL}, #{TITLE_COL} FROM #{TABLE_NAME}") do |result|
+    memos = result_into_array(result)
   end
   memos
 end
 
-def write_titles(id_text, params)
-  File.open('./titles.txt', 'a') do |file|
-    file.puts "#{id_text}, #{params[:title]}"
-  end
+def connect_db
+  conn = PG.connect(dbname: 'postgres')
+  conn.field_name_type = :symbol
+  conn
 end
 
-def read_memo_contents(memo_id)
+def result_into_array(result)
+  memos = []
+  result.cmd_tuples.times do |i|
+    memos << result[i]
+  end
+  memos
+end
+
+def read_memo_contents(id_text)
   contents = {}
-  File.open("./memos/#{memo_id}.txt", 'r') do |file|
-    body = ''
-    file.read.split("\n").each_with_index do |content, i|
-      case i
-      when 0 then contents.store(:index, content)
-      when 1 then contents.store(:title, content)
-      else
-        body += "#{content}\n"
-      end
-      contents.store(:body, body)
-    end
+  conn = connect_db
+  conn.exec("SELECT #{MEMO_ID} as #{ID_COL}, #{TITLE_COL}, #{BODY_COL} as #{BODY_COL} FROM #{TABLE_NAME} WHERE #{ID_COL} = #{id_text.to_i}") do |result|
+    contents = result[0]
   end
   contents
 end
 
 def delete_memo(id_text)
-  File.delete("./memos/#{id_text}.txt")
-end
-
-def delete_title(id_text)
-  titles = []
-  File.open('./titles.txt', 'r') do |file|
-    file.read.lines do |line|
-      titles << line if line.index(id_text).nil?
-    end
-  end
-  File.open('./titles.txt', 'w') do |file|
-    file.puts titles.join
-  end
-end
-
-def update_title(id_text, params)
-  titles = []
-  File.open('./titles.txt', 'r') do |file|
-    file.read.lines do |line|
-      titles << (line.index(id_text).nil? ? line : "#{id_text}, #{CGI.escapeHTML(params[:title])}\n")
-    end
-  end
-  File.open('./titles.txt', 'w') do |file|
-    file.puts titles.join
-  end
+  conn = connect_db
+  conn.exec("DELETE FROM #{TABLE_NAME} WHERE #{ID_COL} = #{id_text.to_i}")
 end

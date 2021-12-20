@@ -11,9 +11,9 @@
     <form action="/memos" method="post">
       <div class="form_block">
         <label for="title">タイトル（必須）<%=@message%></label>
-        <%="<input type=\"text\" name=\"title\" id=\"title\" class=\"text-box\" value=\"#{@memo_contents[:title]}\">"%>
+        <%="<input type=\"text\" name=\"title\" id=\"title\" class=\"text-box\" value=\"#{@memo_contents[TITLE_SYM]}\">"%>
         <label for="body">メモ</label>
-        <%="<textarea name=\"body\" id=\"body\" class=\"text-box\">#{@memo_contents[:body]}</textarea>"%>
+        <%="<textarea name=\"body\" id=\"body\" class=\"text-box\">#{@memo_contents[BODY_SYM]}</textarea>"%>
       </div>
       <div class="button">
         <button>保存</button>

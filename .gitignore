@@ -1,8 +1,4 @@
-.DS_Store
-memo-app.app/
-sinatra-webapp/.DS_Store
 sinatra-webapp/.rubocop.yml
-sinatra-webapp/memos/
-sinatra-webapp/public/.DS_Store
-sinatra-webapp/public/image/.DS_Store
+.DS_Store
 Gemfile.lock
+sinatra-webapp/test.rb
