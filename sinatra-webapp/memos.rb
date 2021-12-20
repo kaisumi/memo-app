@@ -65,6 +65,7 @@ end
 
 
 def write_memo(id_text, params)
+  Dir.mkdir("memos") if !Dir.exist?("memos")
   File.open("./memos/#{id_text}.txt", 'w') do |file|
     file.puts "#{id_text}\n#{CGI.escapeHTML(params[:title])}\n#{CGI.escapeHTML(params[:body])}"
   end
