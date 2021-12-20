@@ -12,6 +12,8 @@
 ![image](https://user-images.githubusercontent.com/39044468/146695298-5e260bc9-8d5d-42a9-a5fb-5f09cd139d90.png)
 ## Rubyのインストール
 このアプリの実行にはRuby 3.0.0以降が必要です。お使いの環境に応じて[公式サイト](https://www.ruby-lang.org/ja/)からインストールしてください。
+## PostgreSQLのインストール
+このアプリの実行にはPostgreSQL 14が必要です。お使いの環境に応じて[公式サイト](https://www.postgresql.org/)からインストールしてください。
 ## gemのインストール
 コマンドラインを使用して、memo-app直下で以下を実行
 ```
