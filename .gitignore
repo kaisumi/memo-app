@@ -5,3 +5,4 @@ sinatra-webapp/.rubocop.yml
 sinatra-webapp/memos/
 sinatra-webapp/public/.DS_Store
 sinatra-webapp/public/image/.DS_Store
+Gemfile.lock
