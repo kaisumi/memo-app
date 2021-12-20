@@ -28,7 +28,7 @@ h2{
   margin-left: 20pt;
 }
 p{
-  margin-left: 40pt;
+  margin-left: 20pt;
   white-space: pre-line;
 }
 .button{
@@ -58,4 +58,9 @@ header{
 .to-right{
   display:inline-block;
   text-align: right;
+}
+footer, .contents{
+  display: block;
+  width: 90%;
+  margin: 0 auto;
 }
