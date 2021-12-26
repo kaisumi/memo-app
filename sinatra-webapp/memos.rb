@@ -4,6 +4,7 @@ require 'sinatra'
 require 'cgi'
 
 NO_TITLE_ERROR = '<font color="red">タイトルが空欄です</font>'
+MEMO_ID_DIGIT = 10
 
 get '/' do
   @memo_titles = read_titles
@@ -31,23 +32,23 @@ post '/memos' do
   end
 end
 
-delete %r{/memos/([0-9]{4})} do |id_text|
+delete %r{/memos/([0-9]{10})} do |id_text|
   delete_memo(id_text)
   delete_title(id_text)
   redirect to('/')
 end
 
-get %r{/memos/([0-9]{4})} do |id_text|
+get %r{/memos/([0-9]{10})} do |id_text|
   @memo_contents = read_memo_contents(id_text)
   erb :memo_contents
 end
 
-get %r{/editor/([0-9]{4})} do |id_text|
+get %r{/memos/([0-9]{10})/editor} do |id_text|
   @memo_contents = read_memo_contents(id_text)
   erb :editor
 end
 
-patch %r{/memos/([0-9]{4})} do |id_text|
+patch %r{/memos/([0-9]{10})} do |id_text|
   @title_blank = false
   if params[:title].empty?
     @title_blank = true
@@ -74,7 +75,7 @@ end
 def new_id
   id_text = ''
   File.open('./memo_latest_id.txt', 'r') do |file|
-    id_text = format('%04d', file.read.to_i + 1)
+    id_text = format("%0#{MEMO_ID_DIGIT}d", file.read.to_i + 1)
   end
   File.open('./memo_latest_id.txt', 'w') do |file|
     file.puts id_text
@@ -84,20 +85,14 @@ end
 
 def read_titles
   memos = []
-  contents = {}
   File.open('./titles.txt', 'r') do |file|
-    file.read.split("\n").each do |memo|
-      next if memo.empty?
+    memos = \
+      file.read.split("\n").map do |memo|
+        next if memo.empty?
 
-      memo.split(', ').each_with_index do |content, i|
-        case i
-        when 0 then contents.store(:memo_id, content)
-        when 1 then contents.store(:title, content)
-        end
+        memo_id, title = memo.split(', ')
+        { memo_id: memo_id, title: title }
       end
-      memos << contents
-      contents = {}
-    end
   end
   memos
 end

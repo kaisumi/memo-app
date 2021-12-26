@@ -15,7 +15,9 @@
   <div class="contents">
     <ul>
       <% @memo_titles.each do |memo| %>
-        <li><%="<a href=\"/memos/#{memo[:memo_id]}\">#{memo[:title]}</a>"%></li>
+        <% unless memo.nil? %>
+          <li><%="<a href=\"/memos/#{memo[:memo_id]}\">#{memo[:title]}</a>"%></li>
+        <% end %>
       <% end %>
     </ul>
   </div>

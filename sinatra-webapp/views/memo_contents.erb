@@ -14,7 +14,7 @@
     <p><%= @memo_contents[:body]%></p>
     <div class="buttons">
       <div class="contents-button">
-        <%="<form action=\"\/editor\/#{@memo_contents[:index]}\" method=\"get\">"%>
+        <%="<form action=\"\/memos\/#{@memo_contents[:index]}\/editor\" method=\"get\">"%>
           <button>変更</button>
         </form>
       </div>
