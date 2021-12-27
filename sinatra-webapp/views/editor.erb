@@ -8,13 +8,13 @@
 <body>
   <header>
     <h1>メモアプリ</h1>
-    <%="<form action=\"/memos/#{@memo_contents[:index]}\" method=\"post\">"%>
+    <%="<form action=\"/memos/#{CGI.escapeHTML(@memo_contents[:memo_id])}\" method=\"post\">"%>
       <div class="form_block">
         <input type="hidden" name="_method" value="patch">
         <label for="title">タイトル（必須）<%=@message%></label>
-        <%="<input type=\"text\" name=\"title\" id=\"title\" class=\"text-box\" value=\"#{@memo_contents[:title]}\">"%>
+        <%="<input type=\"text\" name=\"title\" id=\"title\" class=\"text-box\" value=\"#{CGI.escapeHTML(@memo_contents[:title])}\">"%>
         <label for="body">メモ</label>
-        <%="<textarea name=\"body\" id=\"body\" class=\"text-box\">#{@memo_contents[:body]}</textarea>"%>
+        <%="<textarea name=\"body\" id=\"body\" class=\"text-box\">#{CGI.escapeHTML(@memo_contents[:body])}</textarea>"%>
       </div>
       <div class="button">
         <button>変更</button>
