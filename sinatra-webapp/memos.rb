@@ -2,8 +2,8 @@
 
 require 'sinatra'
 require 'cgi'
+require_relative 'error_check'
 
-NO_TITLE_ERROR = '<font color="red">タイトルが空欄です</font>'
 MEMO_ID_DIGIT = 10
 STORAGE = 'memos'
 LATEST_ID = './memo_latest_id.txt'
@@ -15,57 +15,52 @@ end
 
 get '/new-memo' do
   @memo_contents = { title: '', body: '' }
+  @error_check = ErrorCheck.new
   erb :new_memo
 end
 
 post '/memos' do
-  @title_blank = false
-  if params[:title].empty?
-    @title_blank = true
-    @memo_contents = params
-    @message = NO_TITLE_ERROR
-    erb :new_memo
-  else
-    @message = ''
+  @error_check = ErrorCheck.new(params)
+  if @error_check.status
     id_text = new_id
     write_memo(id_text, params)
     redirect to('/')
+  else
+    @memo_contents = params
+    erb :new_memo
   end
 end
 
-delete %r{/memos/([0-9]{10})} do |id_text|
+delete %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   delete_memo(id_text)
   redirect to('/')
 end
 
-get %r{/memos/([0-9]{10})} do |id_text|
+get %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   @memo_contents = read_memo_contents(id_text)
   erb :memo_contents
 end
 
-get %r{/memos/([0-9]{10})/editor} do |id_text|
+get %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})/editor} do |id_text|
+  @error_check = ErrorCheck.new
   @memo_contents = read_memo_contents(id_text)
   erb :editor
 end
 
-patch %r{/memos/([0-9]{10})} do |id_text|
-  @title_blank = false
-  if params[:title].empty?
-    @title_blank = true
+patch %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
+  @error_check = ErrorCheck.new(params)
+  if @error_check.status
+    write_memo(id_text, params)
+    redirect to(memo_url(id_text))
+  else
     @memo_contents = params
     @memo_contents[:memo_id] = id_text
-    @message = NO_TITLE_ERROR
     erb :editor
-  else
-    @message = ''
-    write_memo(id_text, params)
-    redirect to("/#{STORAGE}/#{id_text}")
   end
 end
 
 def write_memo(id_text, params)
-  Dir.mkdir(STORAGE) unless Dir.exist?(STORAGE)
-  File.open("./#{STORAGE}/#{id_text}.txt", 'w') do |file|
+  File.open(memo_path(id_text), 'w') do |file|
     file.puts "#{id_text}\n#{params[:title]}\n#{params[:body]}"
   end
 end
@@ -73,7 +68,7 @@ end
 def new_id
   id_text = ''
   File.open(LATEST_ID, 'r') do |file|
-    id_text = format("%0#{MEMO_ID_DIGIT}d", file.read.to_i + 1)
+    id_text = id_integer_to_text(file.read.to_i + 1)
   end
   File.open(LATEST_ID, 'w') do |file|
     file.puts id_text
@@ -82,42 +77,46 @@ def new_id
 end
 
 def read_titles
-  id_text = ''
-  memo_titles = []
-  File.open(LATEST_ID, 'r') do |file|
-    id_text = file.read.delete("\n")
+  # memo_titles =
+  read_filenames.map do |memo_id|
+    contents = read_memo_contents(memo_id)
+    { memo_id: contents[:memo_id], title: contents[:title] }
   end
-  unless id_text.to_i.zero?
-    1.upto(id_text.to_i) do |id_integer|
-      memo_id = format("%0#{MEMO_ID_DIGIT}d", id_integer)
-      filename = "./#{STORAGE}/#{memo_id}.txt"
-      if File.exist?(filename)
-        contents = read_memo_contents(memo_id)
-        memo_titles << { memo_id: contents[:memo_id], title: contents[:title] }
-      end
-    end
-  end
-  memo_titles
 end
 
 def read_memo_contents(memo_id)
   contents = {}
-  filename = "./#{STORAGE}/#{memo_id}.txt"
-  File.open(filename, 'r') do |file|
-    body = ''
-    file.read.split("\n").each_with_index do |content, i|
-      case i
-      when 0 then contents.store(:memo_id, content)
-      when 1 then contents.store(:title, content)
-      else
-        body += "#{content}\n"
-      end
-      contents.store(:body, body)
-    end
+  File.open(memo_path(memo_id), 'r') do |file|
+    lines = file.read.split("\n")
+    contents = { memo_id: lines.shift, title: lines.shift, body: lines.join("\n") }
   end
   contents
 end
 
 def delete_memo(id_text)
-  File.delete("./#{STORAGE}/#{id_text}.txt")
+  File.delete(memo_path(id_text))
+end
+
+def memo_url(id_text)
+  "/#{STORAGE}/#{id_text}"
+end
+
+def memo_path(id_text)
+  ".#{memo_url(id_text)}.txt"
+end
+
+def id_integer_to_text(id_integer)
+  format("%0#{MEMO_ID_DIGIT}d", id_integer)
+end
+
+def initialize
+  Dir.mkdir(STORAGE) unless Dir.exist?(STORAGE)
+end
+
+def read_filenames
+  filenames = []
+  Dir.glob('*.txt', base: STORAGE) do |filename|
+    filenames << filename.delete('.txt')
+  end
+  filenames
 end
