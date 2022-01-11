@@ -16,7 +16,7 @@
         <label for="title">タイトル（必須）<%=@message%></label>
         <%="<input type=\"text\" name=\"title\" id=\"title\" class=\"text-box\" value=\"#{CGI.escapeHTML(@memo_contents[:title])}\" required>"%>
         <label for="body">メモ</label>
-        <%="<textarea name=\"body\" id=\"body\" class=\"text-box\">#{CGI.escapeHTML(@memo_contents[:body])}</textarea>"%>
+        <%="<textarea name=\"body\" id=\"body\" class=\"text-box\">#{CGI.escapeHTML(@memo_contents[:memo])}</textarea>"%>
       </div>
       <div class="button">
         <button>変更</button>

@@ -10,7 +10,7 @@ TABLE_NAME = 'memos'
 TITLE_COL = 'title'
 ID_COL = 'memo_id'
 BODY_COL = 'memo'
-# MEMO_ID = "to_char(#{ID_COL}, 'FM0000000000')"
+MEMO_ID = "to_char(#{ID_COL}, 'FM0000000000')"
 
 get '/' do
   @memo_titles = read_titles
@@ -26,7 +26,6 @@ end
 post '/memos' do
   @error_check = ErrorCheck.new(params)
   if @error_check.status
-    id_text = new_id
     add_memo(params)
     redirect to('/')
   else
@@ -63,9 +62,13 @@ patch %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   end
 end
 
+def memo_url(id_text)
+  "/memos/#{id_text}"
+end
+
 def add_memo(params)
   conn = connect_db
-  conn.exec(sql_insert(sanitizer(params[:title]), sanitizer(params[:body])))  # ここはシンボルをリテラルで入れないとescapeHTMLでエラーが出る
+  conn.exec(sql_insert(params[:title], params[:body]))
 end
 
 def sql_insert(title, body)
@@ -74,15 +77,11 @@ end
 
 def update_memo(id_text, params)
   conn = connect_db
-  conn.exec(sql_update(sanitizer(params[:title]), sanitizer(params[:body]), id_text.to_i)) # 同上
+  conn.exec(sql_update(params[:title], params[:body], id_text.to_i))
 end
 
 def sql_update(title, body, id_integer)
   "UPDATE #{TABLE_NAME} SET #{TITLE_COL} = '#{title}', #{BODY_COL} = '#{body}' WHERE #{ID_COL} = #{id_integer}"
-end
-
-def sanitizer(text)
-  CGI.escapeHTML(text).gsub('\r\n', '<br />')
 end
 
 def read_titles
