@@ -1,4 +1,2 @@
-sinatra-webapp/.rubocop.yml
-.DS_Store
-Gemfile.lock
-sinatra-webapp/test.rb
+memo-app.app/
+sinatra-webapp/memos/

@@ -2,17 +2,15 @@
 
 require 'sinatra'
 require 'cgi'
+require_relative 'error_check'
 require 'pg'
 
-NO_TITLE_ERROR = '<font color="red">タイトルが空欄です</font>'
+MEMO_ID_DIGIT = 10
 TABLE_NAME = 'memos'
 TITLE_COL = 'title'
 ID_COL = 'memo_id'
 BODY_COL = 'memo'
-MEMO_ID = "to_char(#{ID_COL}, 'FM0000')"
-TITLE_SYM = TITLE_COL.to_sym
-BODY_SYM = BODY_COL.to_sym
-ID_SYM = ID_COL.to_sym
+# MEMO_ID = "to_char(#{ID_COL}, 'FM0000000000')"
 
 get '/' do
   @memo_titles = read_titles
@@ -20,51 +18,48 @@ get '/' do
 end
 
 get '/new-memo' do
-  @memo_contents = { TITLE_SYM => '', BODY_SYM => '' }
+  @memo_contents = { title: '', body: '' }
+  @error_check = ErrorCheck.new
   erb :new_memo
 end
 
 post '/memos' do
-  @title_blank = false
-  if params[TITLE_SYM].empty?
-    @title_blank = true
-    @memo_contents = params
-    @message = NO_TITLE_ERROR
-    erb :new_memo
-  else
-    @message = ''
+  @error_check = ErrorCheck.new(params)
+  if @error_check.status
+    id_text = new_id
     add_memo(params)
     redirect to('/')
+  else
+    @memo_contents = params
+    erb :new_memo
   end
 end
 
-delete %r{/memos/([0-9]{4})} do |id_text|
+delete %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   delete_memo(id_text)
   redirect to('/')
 end
 
-get %r{/memos/([0-9]{4})} do |id_text|
+get %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   @memo_contents = read_memo_contents(id_text)
   erb :memo_contents
 end
 
-get %r{/editor/([0-9]{4})} do |id_text|
+get %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})/editor} do |id_text|
+  @error_check = ErrorCheck.new
   @memo_contents = read_memo_contents(id_text)
   erb :editor
 end
 
-patch %r{/memos/([0-9]{4})} do |id_text|
-  @title_blank = false
-  if params[TITLE_SYM].empty?
-    @title_blank = true
-    @memo_contents = params
-    @memo_contents[ID_SYM] = id_text
-    @message = NO_TITLE_ERROR
-    erb :editor
-  else
-    @message = ''
+patch %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
+  @error_check = ErrorCheck.new(params)
+  if @error_check.status
     update_memo(id_text, params)
-    redirect to("/memos/#{id_text}")
+    redirect to(memo_url(id_text))
+  else
+    @memo_contents = params
+    @memo_contents[:memo_id] = id_text
+    erb :editor
   end
 end
 
