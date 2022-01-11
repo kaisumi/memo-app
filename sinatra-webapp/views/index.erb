@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<head>
+  <meta charset="utf-8">
+  <title>メモアプリ</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="shortcut icon" href="/image/favicon.ico" />
+</head>
+<body>
+  <header>
+    <h1>メモアプリ</h1>
+    <form class="to-right" action="/new-memo" method="get" id="add">
+      <button>追加</button>
+    </form>
+  </header>
+  <div class="contents">
+    <ul>
+      <% @memo_titles.each do |memo| %>
+        <% unless memo.nil? %>
+          <li><%="<a href=\"/memos/#{memo[:memo_id]}\">#{memo[:title]}</a>"%></li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+</body>

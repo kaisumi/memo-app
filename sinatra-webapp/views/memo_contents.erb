@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<head>
+  <meta charset="utf-8">
+  <title>メモアプリ</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="shortcut icon" href="/image/favicon.ico" />
+</head>
+<body>
+  <header>
+    <h1>メモアプリ</h1>
+  </header>
+  <div class="contents">
+    <h2><%= CGI.escapeHTML(@memo_contents[:title])%></h2>
+    <p><%= CGI.escapeHTML(@memo_contents[:body])%></p>
+    <div class="buttons">
+      <div class="contents-button">
+        <%="<form action=\"\/memos\/#{@memo_contents[:memo_id]}\/editor\" method=\"get\">"%>
+          <button>変更</button>
+        </form>
+      </div>
+      <div class="contents-button">
+        <%="<form action=\"\/memos\/#{@memo_contents[:memo_id]}\" method=\"post\">"%>
+          <input type="hidden" name="_method" value="delete">
+          <button>削除</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <br />
+    <br />
+    <a href="/">トップに戻る</a>
+  </div>
+</body>
