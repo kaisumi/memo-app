@@ -62,17 +62,9 @@ patch %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   end
 end
 
-def memo_url(id_text)
-  "/memos/#{id_text}"
-end
-
 def add_memo(params)
   conn = connect_db
   conn.exec(sql_insert(params[:title], params[:body]))
-end
-
-def sql_insert(title, body)
-  "INSERT INTO #{TABLE_NAME} (#{TITLE_COL}, #{BODY_COL}) VALUES ('#{title}', '#{body}')"
 end
 
 def update_memo(id_text, params)
@@ -80,29 +72,11 @@ def update_memo(id_text, params)
   conn.exec(sql_update(params[:title], params[:body], id_text.to_i))
 end
 
-def sql_update(title, body, id_integer)
-  "UPDATE #{TABLE_NAME} SET #{TITLE_COL} = '#{title}', #{BODY_COL} = '#{body}' WHERE #{ID_COL} = #{id_integer}"
-end
-
 def read_titles
   memos = []
   conn = connect_db
   conn.exec("SELECT #{MEMO_ID} as #{ID_COL}, #{TITLE_COL} FROM #{TABLE_NAME}") do |result|
     memos = result_into_array(result)
-  end
-  memos
-end
-
-def connect_db
-  conn = PG.connect(dbname: 'postgres')
-  conn.field_name_type = :symbol
-  conn
-end
-
-def result_into_array(result)
-  memos = []
-  result.cmd_tuples.times do |i|
-    memos << result[i]
   end
   memos
 end
@@ -119,4 +93,30 @@ end
 def delete_memo(id_text)
   conn = connect_db
   conn.exec("DELETE FROM #{TABLE_NAME} WHERE #{ID_COL} = #{id_text.to_i}")
+end
+
+def memo_url(id_text)
+  "/memos/#{id_text}"
+end
+
+def sql_insert(title, body)
+  "INSERT INTO #{TABLE_NAME} (#{TITLE_COL}, #{BODY_COL}) VALUES ('#{title}', '#{body}')"
+end
+
+def sql_update(title, body, id_integer)
+  "UPDATE #{TABLE_NAME} SET #{TITLE_COL} = '#{title}', #{BODY_COL} = '#{body}' WHERE #{ID_COL} = #{id_integer}"
+end
+
+def connect_db
+  conn = PG.connect(dbname: 'postgres')
+  conn.field_name_type = :symbol
+  conn
+end
+
+def result_into_array(result)
+  memos = []
+  result.cmd_tuples.times do |i|
+    memos << result[i]
+  end
+  memos
 end
