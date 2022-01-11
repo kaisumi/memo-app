@@ -11,7 +11,7 @@
   </header>
   <div class="contents">
     <h2><%= CGI.escapeHTML(@memo_contents[:title])%></h2>
-    <p><%=  CGI.escapeHTML(@memo_contents[:memo])%></p>
+    <p><%=  CGI.escapeHTML(@memo_contents[:body])%></p>
     <div class="buttons">
       <div class="contents-button">
         <%="<form action=\"\/memos\/#{@memo_contents[:memo_id]}\/editor\" method=\"get\">"%>

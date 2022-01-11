@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 require 'pg'
+require_relative 'constant_parameters'
 
 # brew services start postgresql
 
 # brew services stop postgresql (終了時)
 
-conn = PG.connect(dbname: 'postgres')
-conn.exec('CREATE DATABASE memoapp')
-conn.exec('CREATE TABLE memos (memo_id SERIAL NOT NULL, title text, memo text, PRIMARY KEY (memo_id)) ')
+conn_original = PG.connect(dbname: ORIGINAL_DB_NAME)
+conn_original.exec("CREATE DATABASE #{DB_NAME}")
+conn = PG.connect(dbname: DB_NAME)
+conn.exec("CREATE TABLE #{TABLE_NAME} (#{ID_COL} SERIAL NOT NULL, #{TITLE_COL} text, #{BODY_COL} text, PRIMARY KEY (#{ID_COL})) ")

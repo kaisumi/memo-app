@@ -2,15 +2,9 @@
 
 require 'sinatra'
 require 'cgi'
-require_relative 'error_check'
 require 'pg'
-
-MEMO_ID_DIGIT = 10
-TABLE_NAME = 'memos'
-TITLE_COL = 'title'
-ID_COL = 'memo_id'
-BODY_COL = 'memo'
-MEMO_ID = "to_char(#{ID_COL}, 'FM0000000000')"
+require_relative 'error_check'
+require_relative 'constant_parameters'
 
 get '/' do
   @memo_titles = read_titles
@@ -108,7 +102,7 @@ def sql_update(title, body, id_integer)
 end
 
 def connect_db
-  conn = PG.connect(dbname: 'postgres')
+  conn = PG.connect(dbname: DB_NAME)
   conn.field_name_type = :symbol
   conn
 end
