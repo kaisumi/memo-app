@@ -6,6 +6,8 @@ require 'pg'
 require_relative 'error_check'
 require_relative 'constant_parameters'
 
+CONN = PG.connect(dbname: DB_NAME)
+
 get '/' do
   @memo_titles = sql_interaction(:read_titles)
   erb :index
@@ -81,27 +83,23 @@ end
 
 def execute_sql(command, sql_text, sql_params)
   contents = nil
-  @conn.field_name_type = :symbol
+  CONN.field_name_type = :symbol
 
   case command
   when :read_titles
-    @conn.exec(sql_text) do |result|
+    CONN.exec(sql_text) do |result|
       contents = result.to_a
     end
   when :read_contents
-    @conn.exec_params(sql_text, sql_params) do |result|
+    CONN.exec_params(sql_text, sql_params) do |result|
       contents = result[0]
     end
   else
-    @conn.exec_params(sql_text, sql_params)
+    CONN.exec_params(sql_text, sql_params)
   end
   contents
 end
 
 def memo_url(id_text)
   "/memos/#{id_text}"
-end
-
-def initialize
-  @conn = PG.connect(dbname: DB_NAME)
 end
