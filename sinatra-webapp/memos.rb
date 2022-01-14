@@ -2,14 +2,14 @@
 
 require 'sinatra'
 require 'cgi'
+require 'pg'
 require_relative 'error_check'
+require_relative 'constant_parameters'
 
-MEMO_ID_DIGIT = 10
-STORAGE = 'memos'
-LATEST_ID = './memo_latest_id.txt'
+CONN = PG.connect(dbname: DB_NAME)
 
 get '/' do
-  @memo_titles = read_titles
+  @memo_titles = sql_interaction(:read_titles)
   erb :index
 end
 
@@ -22,8 +22,7 @@ end
 post '/memos' do
   @error_check = ErrorCheck.new(params)
   if @error_check.status
-    id_text = new_id
-    write_memo(id_text, params)
+    sql_interaction(:insert, params: params)
     redirect to('/')
   else
     @memo_contents = params
@@ -32,25 +31,25 @@ post '/memos' do
 end
 
 delete %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
-  delete_memo(id_text)
+  sql_interaction(:delete, id_integer: id_text.to_i)
   redirect to('/')
 end
 
 get %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
-  @memo_contents = read_memo_contents(id_text)
+  @memo_contents = sql_interaction(:read_contents, id_integer: id_text.to_i)
   erb :memo_contents
 end
 
 get %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})/editor} do |id_text|
   @error_check = ErrorCheck.new
-  @memo_contents = read_memo_contents(id_text)
+  @memo_contents = sql_interaction(:read_contents, id_integer: id_text.to_i)
   erb :editor
 end
 
 patch %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   @error_check = ErrorCheck.new(params)
   if @error_check.status
-    write_memo(id_text, params)
+    sql_interaction(:update, params: params, id_integer: id_text.to_i)
     redirect to(memo_url(id_text))
   else
     @memo_contents = params
@@ -59,64 +58,48 @@ patch %r{/memos/([0-9]{#{MEMO_ID_DIGIT}})} do |id_text|
   end
 end
 
-def write_memo(id_text, params)
-  File.open(memo_path(id_text), 'w') do |file|
-    file.puts "#{id_text}\n#{params[:title]}\n#{params[:body]}"
+def sql_interaction(command, params: nil, id_integer: nil)
+  sql_params = []
+  sql_params << params['title'] << params['body'] unless params.nil?
+  sql_params << id_integer unless id_integer.nil?
+  sql_text = generate_sql(command)
+  execute_sql(command, sql_text, sql_params)
+end
+
+def generate_sql(command)
+  case command
+  when :insert
+    "INSERT INTO #{TABLE_NAME} (#{TITLE_COL}, #{BODY_COL}) VALUES ($1, $2)"
+  when :update
+    "UPDATE #{TABLE_NAME} SET #{TITLE_COL} = $1, #{BODY_COL} = $2 WHERE #{ID_COL} = $3"
+  when :delete
+    "DELETE FROM #{TABLE_NAME} WHERE #{ID_COL} = $1"
+  when :read_titles
+    "SELECT #{MEMO_ID} as #{ID_COL}, #{TITLE_COL} FROM #{TABLE_NAME}"
+  when :read_contents
+    "SELECT #{MEMO_ID} as #{ID_COL}, #{TITLE_COL}, #{BODY_COL} as #{BODY_COL} FROM #{TABLE_NAME} WHERE #{ID_COL} = $1"
   end
 end
 
-def new_id
-  id_text = ''
-  File.open(LATEST_ID, 'r') do |file|
-    id_text = id_integer_to_text(file.read.to_i + 1)
-  end
-  File.open(LATEST_ID, 'w') do |file|
-    file.puts id_text
-  end
-  id_text
-end
+def execute_sql(command, sql_text, sql_params)
+  contents = nil
+  CONN.field_name_type = :symbol
 
-def read_titles
-  # memo_titles =
-  read_filenames.map do |memo_id|
-    contents = read_memo_contents(memo_id)
-    { memo_id: contents[:memo_id], title: contents[:title] }
-  end
-end
-
-def read_memo_contents(memo_id)
-  contents = {}
-  File.open(memo_path(memo_id), 'r') do |file|
-    lines = file.read.split("\n")
-    contents = { memo_id: lines.shift, title: lines.shift, body: lines.join("\n") }
+  case command
+  when :read_titles
+    CONN.exec(sql_text) do |result|
+      contents = result.to_a
+    end
+  when :read_contents
+    CONN.exec_params(sql_text, sql_params) do |result|
+      contents = result[0]
+    end
+  else
+    CONN.exec_params(sql_text, sql_params)
   end
   contents
 end
 
-def delete_memo(id_text)
-  File.delete(memo_path(id_text))
-end
-
 def memo_url(id_text)
-  "/#{STORAGE}/#{id_text}"
-end
-
-def memo_path(id_text)
-  ".#{memo_url(id_text)}.txt"
-end
-
-def id_integer_to_text(id_integer)
-  format("%0#{MEMO_ID_DIGIT}d", id_integer)
-end
-
-def initialize
-  Dir.mkdir(STORAGE) unless Dir.exist?(STORAGE)
-end
-
-def read_filenames
-  filenames = []
-  Dir.glob('*.txt', base: STORAGE) do |filename|
-    filenames << filename.delete('.txt')
-  end
-  filenames
+  "/memos/#{id_text}"
 end

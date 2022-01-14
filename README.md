@@ -12,17 +12,26 @@
 ![image](https://user-images.githubusercontent.com/39044468/146695298-5e260bc9-8d5d-42a9-a5fb-5f09cd139d90.png)
 ## Rubyのインストール
 このアプリの実行にはRuby 3.0.0以降が必要です。お使いの環境に応じて[公式サイト](https://www.ruby-lang.org/ja/)からインストールしてください。
+## PostgreSQLのインストール
+このアプリの実行にはPostgreSQL 14が必要です。お使いの環境に応じて[公式サイト](https://www.postgresql.org/)からインストールしてください。
 ## gemのインストール
 コマンドラインを使用して、memo-app直下で以下を実行
 ```
 bundle install
+```
+## データベースのセットアップ
+コマンドラインでsinatra-webappに移動し、以下を実行
+```
+brew services start postgresql
+ruby setup.rb
 ```
 
 # Usage
 ## 起動方法
 1. コマンドラインでmemo-appに移動し、以下を実行
 ```
-./sinatra-up
+brew services start postgresql # postgresqlの開始
+./sinatra-up # sinatraの開始
 ```
 2. ブラウザでlocalhost:4567にアクセス
 ![image](https://user-images.githubusercontent.com/39044468/146695456-1e9ee933-399c-4853-853f-ab4a1dfaa951.png)
@@ -43,6 +52,18 @@ memo-app/sinatra-webapp/memos/のメモが削除されます。
 1. ブラウザを閉じる
 2. sinatraを起動していたシェルの画面でCtrl+cを押下
 3. シェルを閉じる
+4. コマンドラインで以下を実行（postgresqlを停止）
+```
+brew services stop postgresql
+```
+
+# Uninstall
+## データベースのアンインストール
+**メモデータが全て削除されます**
+コマンドラインでsinatra-webappに移動し、以下を実行
+```
+ruby drop.rb
+```
 
 # Author
 - 木村　亜矢

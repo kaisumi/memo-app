@@ -8,6 +8,8 @@
 <body>
   <header>
     <h1>メモアプリ</h1>
+  </header>
+  <div class="contents">
     <%="<form action=\"/memos/#{CGI.escapeHTML(@memo_contents[:memo_id])}\" method=\"post\">"%>
       <div class="form_block">
         <input type="hidden" name="_method" value="patch">
@@ -20,7 +22,7 @@
         <button>変更</button>
       </div>
     </form>
-  </header>
+  </div>
   <footer>
     <br />
     <br />
